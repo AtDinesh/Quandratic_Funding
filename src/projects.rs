@@ -31,11 +31,13 @@ impl Project {
             contribution_list: Vec::new()}
     }
 
+    // Add a contribution to the contribution vector.
     pub fn add_contribution(&mut self, contribution: Contribution) {
         // TODO: Check if the contributor already participated to this contribution (avoid easy Sybill)
         self.contribution_list.push(contribution.clone());
     }
-
+    
+    // Update the projects data with data contained in the vector of contributions.
     pub fn update(&mut self) {
         // reset values in case previous update occured
         self.total_contribution = 0f64;
