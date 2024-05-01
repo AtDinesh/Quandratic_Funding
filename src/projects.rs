@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use std::collections::HashMap;
 
 // Define a struct to represent a contribution
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -16,7 +17,7 @@ pub struct Project {
     sum_rootsquared_contribution: f64,
     matching_amount: f64,
     final_amount: f64,
-    contribution_list: Vec<Contribution>,
+    contribution_list: HashMap<u32, f64>,
 }
 
 impl Project {
@@ -28,13 +29,14 @@ impl Project {
             sum_rootsquared_contribution: 0.0, 
             matching_amount: 0.0, 
             final_amount: 0.0, 
-            contribution_list: Vec::new()}
+            contribution_list: HashMap::new()
+        }
     }
 
     // Add a contribution to the contribution vector.
     pub fn add_contribution(&mut self, contribution: Contribution) {
         // TODO: Check if the contributor already participated to this contribution (avoid easy Sybill)
-        self.contribution_list.push(contribution.clone());
+        self.contribution_list.entry(contribution.from).and_modify(|v| {*v += contribution.amount}).or_insert(contribution.amount);
     }
     
     // Update the projects data with data contained in the vector of contributions.
@@ -45,9 +47,9 @@ impl Project {
         self.matching_amount = 0f64;
         self.final_amount = 0f64;
 
-        for contribution in &self.contribution_list {
-            self.total_contribution = self.total_contribution + contribution.amount;
-            self.sum_rootsquared_contribution = self.sum_rootsquared_contribution + contribution.amount.clone().sqrt();
+        for (_id, amount) in self.contribution_list.clone().into_iter() {
+            self.total_contribution += amount;
+            self.sum_rootsquared_contribution = self.sum_rootsquared_contribution + amount.clone().sqrt();
         }
         self.sum_rootsquared_contribution = self.sum_rootsquared_contribution.powi(2);
     }
@@ -69,7 +71,8 @@ mod tests {
         assert_eq!(0.0, project0.final_amount);
 
         assert_eq!(1, project0.contribution_list.len());
-        assert_eq!(contrib, project0.contribution_list[0])
+        // Use Some() to get an Option<>, use cloned() to pass from &f64 to f64
+        assert_eq!(Some(100f64), project0.contribution_list.get(&contrib.from).cloned());
     }
 
     #[test]
